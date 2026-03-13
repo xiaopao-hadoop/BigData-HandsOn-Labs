@@ -174,7 +174,7 @@ CMD=$*
 for host in lake-master-01 lake-worker-01 lake-worker-02
 do
     echo "========== $host =========="
-    # 强制以登录 Shell 模式运行，确保环境变量加载
+    # 登录 Shell 模式运行，确保环境变量加载
     ssh $host "bash -lc '$CMD'"
 done
 ```
