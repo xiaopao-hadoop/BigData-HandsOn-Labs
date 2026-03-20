@@ -1,6 +1,6 @@
 # 阶段二：Hadoop 3.1.3 集群部署 
 
-Hadoop 是整个数据湖与实时计算平台的基础底座。后续的 HBase、Hive、Iceberg 均依赖 HDFS 作为底层存储，而 Spark 和 Flink 则依赖 YARN 进行统一的资源调度。本阶段将部署高可用、企业标准规范的 Hadoop 3.1.3 集群。
+Hadoop 是整个数据湖与实时计算平台的基础底座。后续的 HBase、Hive、Iceberg 均依赖 HDFS 作为底层存储，而 Spark 和 Flink 则依赖 YARN 进行统一的资源调度。本阶段部署稳定的 Hadoop 3.1.3 集群。
 
 ## 1. 目录初始化与权限分配
 
@@ -95,7 +95,7 @@ cd /opt/module/hadoop-3.1.3/etc/hadoop/
 ```
 
 ### 4.3 资源调度与隔离机制 (`yarn-site.xml`)
-声明 ResourceManager 的主控节点，并关闭虚拟内存硬性校验，以提升微服务和虚拟化环境下的容器存活率。开启日志聚合功能以便后续的分布式任务排查。
+声明 ResourceManager 的主控节点，并关闭虚拟内存硬性校验，提升微服务和虚拟化环境下的容器存活率。开启日志聚合功能以便后续的分布式任务排查。
 
 ```xml
 <configuration>
@@ -146,7 +146,7 @@ lake-worker-02
 > **避坑指南：**
 > 严禁在 `workers` 文件中留下 `localhost`，并且每一行后不能有空格，文件末尾不能有空行，否则会导致 DataNode 启动异常或出现僵尸节点。
 
-编辑 `hadoop-env.sh` 注入物理机 JDK 坐标：
+编辑 `hadoop-env.sh` 注入 JDK ：
 ```bash
 # 在文件末尾追加，防止 SSH 非交互式登录引发的 JAVA_HOME 丢失
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
@@ -173,7 +173,7 @@ source /etc/profile
 
 ## 6. 存储格式化与集群点火
 
-在首次挂载启动前，必须对底层文件系统进行结构化建立。
+在首次挂载启动前，必须对底层文件系统进行结构建立。
 
 > **⚠️ 注意：**
 > NameNode 格式化指令具有破坏性，**仅允许在 `lake-master-01` 节点执行一次**，切勿重复执行！若多次执行将导致 ClusterID 变更，进而引发 DataNode 拒绝连接的灾难性故障。
