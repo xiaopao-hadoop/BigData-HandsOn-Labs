@@ -4,7 +4,7 @@
 
 ## 1. 操作系统与网络规划
 
-为了保证集群的稳定性和后续网络通信的可靠性，本平台统一采用固定的操作系统版本并配置静态 IP。
+考虑到虚拟机和windows后期的交互，这里统一采用配置静态 IP（也就是虚拟机NAT模式）。
 
 * **操作系统**：Ubuntu 22.04.3 服务器版 
 * **网络架构**：采用 3 台节点构成的集群，具体映射关系如下：
@@ -21,7 +21,7 @@
 
 * `/opt/software`：统一存放所有下载的第三方组件压缩包及安装文件。
 * `/opt/module`：统一存放所有解压并配置完成的大数据组件运行实例。
-* `/opt/data`：存放各组件运行过程中产生的持久化数据（如 Zookeeper 数据、Kafka 消息日志等）。
+* `/opt/data`：存放各组件运行过程中产生的持久化数据。
 * `/opt/logs`：统一集中存放各组件的运行日志，便于后续使用工具进行采集和故障排查。
 
 ## 3. 核心组件分布矩阵
@@ -38,18 +38,17 @@
 | **Solr (Cloud 模式)** | Solr Node  | Solr Node  | Solr Node  |
 | **MySQL** | MySQL Server  | - | - |
 | **Hive** | Metastore, HiveServer2  | - | - |
-| **Spark** | History Server  | - | - |
+| **Spark (on YARN)** | History Server  | - | - |
 | **Atlas** | Atlas Server  | - | - |
 | **Flink (on YARN)** | Flink Client (提交节点)  | TaskManager (YARN 动态分配)  | TaskManager (YARN 动态分配)  |
+| **StarRocks** | FE  | BE | BE |
 
 ## 4. 全局环境变量与批量管控脚本策略
 
-面对分布式集群，单机逐一配置效率极低。本集群在规划之初便引入了脚本化管控思想：
+面对分布式集群，利用脚本可以提高配置效率：
 
 1. **统一环境变量注入**：
-   在 Master 节点统一编写 `/etc/profile.d/my_env.sh` 脚本，随后通过 `scp` 命令结合后续的批量同步工具分发至所有 Worker 节点的 `~/` 目录 。
-2. **xcall.sh 批量执行引擎**：
+   在 Master 节点统一编写 `/etc/profile.d/my_env.sh` 脚本，随后通过 `scp` 命令/`xsync.sh`结合后续的批量同步工具分发至所有 Worker 节点。
+2. **xcall.sh 批量执行脚本**：
    引入自定义的 `xcall.sh` 脚本，借助 SSH 免密登录机制，实现“一端输入，全网执行”。例如，分发环境变量后，可通过该脚本一键完成配置文件的移动并授予执行权限：`/home/hadoop/xcall.sh "sudo mv ~/my_env.sh /etc/profile.d/my_env.sh && sudo chmod +x /etc/profile.d/my_env.sh"` 。
 
----
-> **提示**：阶段零看似简单，但它决定了你的集群是否具备“可维护性”。请务必在你的三台虚拟机上严格按照上述表格验证 IP 和主机名，一旦 `/etc/hosts` 映射出错，后续的 Zookeeper 选举和 HDFS RPC 通信将直接崩溃。
