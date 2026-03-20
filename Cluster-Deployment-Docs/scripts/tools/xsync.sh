@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =================================================================
-# Description: 集群文件同步脚本 (Cluster File Synchronizer)
+# Description: 集群文件分发脚本 (Cluster File Synchronizer)
 # Usage: ./xsync.sh /path/to/file_or_dir
 # =================================================================
 
