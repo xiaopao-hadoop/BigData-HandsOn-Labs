@@ -1,15 +1,15 @@
 # 阶段一：OS 初始化与基础环境构建
 
-在大数据集群架构中，底层的稳定性直接决定了上层分布式组件（如 HDFS、Kafka、Flink 等）的运行质量。本阶段涵盖主机网络配置、用户权限管理、SSH免密互信机制搭建，以及核心运行时环境（JDK与Python）的部署。旨在通过标准化配置，消除节点间的环境差异，构建具备高可用潜力的计算基座。
+在大数据集群架构中，底层环境的稳定性直接决定了上层分布式组件的运行质量。本阶段涵盖主机网络配置、用户权限管理、SSH免密互信机制搭建，以及编程环境（JDK与Python）的部署。
 
 ---
 
 ## 1. 节点网络拓扑与主机名规划
 
-分布式系统内部通信极度依赖静态 IP 与主机名映射。在 Ubuntu 22.04 LTS 环境下，需执行以下标准配置。
+分布式系统内部通信依赖 IP 进行通信。结合静态NAT模式，可进行IP和主机名的映射。在 Ubuntu环境下，执行以下配置。
 
 ### 1.1 主机名持久化配置
-在各节点执行以下命令进行标识，以 **Master** 节点为例：
+在各节点执行以下命令定义主机名：
 
 ```bash
 # 在 Master 节点执行
@@ -21,13 +21,13 @@ sudo hostnamectl set-hostname lake-master-01
 ```
 
 ### 1.2 Netplan 静态网络配置
-编辑 Netplan 配置文件以固定集群 IP 地址，防止因 DHCP 变化导致集群通信中断：
+编辑 Netplan 配置文件以映射集群 IP 地址，防止因 DHCP 变化导致集群通信中断：
 
 ```bash
 sudo nano /etc/netplan/00-installer-config.yaml
 ```
 
-写入以下标准配置（请根据实际物理网卡名称如 `ens33` 或 `eth0` 进行调整）：
+写入以下标准配置（请根据实际物理网卡进行调整, via填写网卡的IP），以下以 `master` 节点举例：
 
 ```yaml
 network:
@@ -50,7 +50,7 @@ sudo netplan apply
 ```
 
 ### 1.3 集群全域 Host 映射
-编辑 `/etc/hosts`，确保三台机器的映射表保持绝对一致，以支持内部 RPC 调用：
+编辑 `/etc/hosts`，确保三台机器的映射表保持绝对一致，供内部 RPC 调用：
 
 ```bash
 sudo nano /etc/hosts
@@ -58,13 +58,13 @@ sudo nano /etc/hosts
 
 添加以下内容：
 ```text
-192.168.144.101 lake-master-01
-192.168.144.102 lake-worker-01
-192.168.144.103 lake-worker-02
+192.168.1xx.101 lake-master-01
+192.168.1xx.102 lake-worker-01
+192.168.1xx.103 lake-worker-02
 ```
 
 > **避坑指南：**
-> 请务必注释或删除 `127.0.1.1` 的本地解析项。若保留该项，部分大数据组件在注册服务时可能会错误抓取回环地址，导致跨节点通信失败（Connection Refused）。
+> 这里必须注释或删除 `127.0.1.1` 的本地解析项。若保留该项，部分大数据组件在注册服务时可能会错误抓取回环地址，导致跨节点通信失败（Connection Refused）。
 
 ---
 
@@ -114,10 +114,10 @@ ssh-copy-id lake-worker-02
 
 ---
 
-## 3. 计算基座环境部署 (JDK & Python)
+## 3. 编程环境部署 (JDK & Python)
 
-### 3.1 Java 运行时安装
-Hadoop 生态目前对 JDK 8 具备最佳兼容性：
+### 3.1 Java 环境安装
+Hadoop 生态目前对 JDK 8 兼容性最好：
 
 ```bash
 # 更新系统软件源
@@ -132,8 +132,8 @@ java -version
 readlink -f $(which java)
 ```
 
-### 3.2 Miniconda 与 Python 自动化环境
-为后续的数据爬虫及 Flink PyAlink 任务预置环境：
+### 3.2 Miniconda 与 Python 环境
+为后续的数据分析及 Flink PyAlink 任务预置环境：
 
 ```bash
 # 获取安装包
@@ -156,7 +156,7 @@ pip install kafka-python -i [https://pypi.tuna.tsinghua.edu.cn/simple](https://p
 
 为实现“一处编写，处处同步”的高效运维，需部署批量指令执行脚本。
 
-在 `/home/hadoop/` 路径下创建 `xcall.sh`：
+在 `/home/hadoop/` 路径下创建 [xcall](./Cluster-Deployment-Docs/scripts/tools/xcall.sh).sh：
 
 ```bash
 #!/bin/bash
@@ -194,5 +194,5 @@ sudo mv xcall.sh /usr/local/bin/
 
 * **网络解析连通性**：三台机器是否都能互相 `ping` 通主机名（例如执行 `ping lake-worker-01`）？
 * **Sudo 提权免密**：`hadoop` 用户是否可以无需输入密码直接执行 `sudo ls` 等管理员指令？
-* **Java 运行时版本**：执行 `java -version`，输出是否为预期的 `1.8` (OpenJDK 8) 版本？
-* **SSH 免密互信**：Master 节点是否能无缝免密登录到两台 Worker 节点（例如执行 `ssh lake-worker-01` 可直接进入而无需验证密码）？
+* **Java 运行版本**：执行 `java -version`，输出是否为预期的 `1.8` (OpenJDK 8) 版本？
+* **SSH 免密通信**：Master 节点是否能无缝免密登录到两台 Worker 节点（例如执行 `ssh lake-worker-01` 可直接进入而无需验证密码）？
