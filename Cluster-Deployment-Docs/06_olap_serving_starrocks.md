@@ -1,8 +1,6 @@
-# 阶段六：极速 OLAP 引擎部署 (StarRocks)
+# 阶段六： OLAP 引擎部署 (StarRocks)
 
-在数据平台的架构中，StarRocks 作为新一代极速全场景 MPP 数据库，承担着向应用层提供亚秒级查询响应的核心职责。本节将记录在 Master 节点 (`lake-master-01`) 上完成 StarRocks FE (前端) 与 BE (后端) 混合部署的过程，并彻底打通与 Iceberg 数据湖的查询链路。
-
-
+在数据平台的架构中，StarRocks 作为新一代极速全场景 MPP 数据库，可以向应用层提供亚秒级查询响应的功能。本节将记录在 Master 节点 (`lake-master-01`) 上完成 StarRocks FE (前端) 与 BE (后端) 混合部署的过程，并彻底打通与 Iceberg 数据湖的查询链路。
 
 ## 1. 基础环境准备与解压
 
@@ -21,7 +19,7 @@ sysctl -p
 ```
 
 ### 1.2 解压与目录规范
-将官方二进制包解压至标准组件目录：
+将官方二进制包解压至组件目录：
 
 ```bash
 cd /opt/software
@@ -109,13 +107,13 @@ JAVA_HOME = /usr/lib/jvm/java-8-openjdk-amd64
 
 ## 4. 集群组网与拓扑验证
 
-FE 和 BE 虽然已在同一物理节点点火启动，但逻辑上依然相互隔离。我们需要通过 MySQL 通信协议接入 FE，手动将 BE 实例注册到集群计算拓扑中。
+FE 和 BE 虽然都成功启动，但逻辑上依然相互隔离。我们需要通过 MySQL 通信协议接入 FE，手动将 BE 实例注册到集群计算拓扑中。
 
 ### 4.1 接入 FE 终端
 StarRocks 完美兼容 MySQL 协议，默认查询接入端口为 `9030`：
 
 ```bash
-mysql -h lake-master-01 -P 9030 -uroot
+mysql -h lake-master-01 -P 9030 -u root
 ```
 
 ### 4.2 注册 BE 节点
@@ -136,11 +134,10 @@ SHOW PROC '/backends'\G
 
 ## 5. 打通湖仓一体：创建 Iceberg External Catalog
 
-部署 StarRocks 的核心战略目的之一，是直接对通过 Flink 实时写入 HDFS 的 Iceberg 数据湖进行极速联邦分析，彻底免去繁琐的数据搬迁 (ETL) 过程。
+部署 StarRocks 的核心战略目的之一，是直接对通过 Flink 实时写入 HDFS 的 Iceberg 数据湖进行极速分析，彻底免去繁琐的数据 ETL 过程。
 
 
-
-在 StarRocks 的 MySQL 终端中执行以下 DDL，直接映射并挂载 Hive Metastore 中纳管的 Iceberg 目录：
+在 StarRocks 的 MySQL 终端中执行以下 DDL，直接映射并挂载 Hive Metastore 中的 Iceberg 目录：
 
 ```sql
 CREATE EXTERNAL CATALOG iceberg_catalog
@@ -154,5 +151,5 @@ PROPERTIES (
 SET CATALOG iceberg_catalog;
 SHOW DATABASES;
 
--- 接下来即可直接使用 SELECT 语句，实现对数据湖中 ODS/DWD 层宽表的亚秒级探索
+-- 接下来即可直接使用 SELECT 语句，实现对数据湖中 ODS/DWD 层宽表的亚秒级OLAP查询
 ```
