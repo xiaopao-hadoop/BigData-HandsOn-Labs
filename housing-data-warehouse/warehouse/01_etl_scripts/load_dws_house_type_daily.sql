@@ -4,7 +4,7 @@ use ershoufang;
 -- 插入数据到 dws_house_type_daily，使用动态分区
 INSERT OVERWRITE TABLE dws_house_type_daily PARTITION (ds)
 SELECT
-    ds,                                   -- 分区字段放在第一位
+    ds,                                   
     room_num,
     hall_num,
     bathroom_num,

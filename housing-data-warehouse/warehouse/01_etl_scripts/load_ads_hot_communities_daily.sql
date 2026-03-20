@@ -73,5 +73,5 @@ SELECT
     rank_by_attention,
     rank_by_visit
 FROM ranked
--- 可选：只保留排名前100的小区，减少数据量（业务按需调整）
+-- 可选：只保留排名前100的小区，减少数据量
 WHERE rank_by_attention <= 100 OR rank_by_visit <= 100;

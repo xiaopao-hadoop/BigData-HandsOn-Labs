@@ -5,7 +5,7 @@ SET spark.sql.sources.partitionOverwriteMode = dynamic;
 -- 插入数据到 dws_orientation_daily，使用动态分区
 INSERT OVERWRITE TABLE dws_orientation_daily PARTITION (ds)
 SELECT
-    ds,                                   -- 分区字段放在第一位
+    ds,                                  
     orientation,
     COUNT(1) AS house_count,
     AVG(total_price) AS avg_total_price,
