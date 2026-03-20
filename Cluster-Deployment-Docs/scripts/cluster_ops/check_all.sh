@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =================================================================
-# Description: 全栈大数据平台健康自检脚本 (Cluster Health Dashboard)
+# Description: 集群组件健康自检脚本 (Cluster Health Dashboard)
 # Usage: ./check_all.sh
 # =================================================================
 
@@ -130,5 +130,29 @@ if [ -n "$atlas_p" ]; then
 else
     echo -e "Atlas:     ${RED}NOT READY${NC} (Initializing or Offline)"
 fi
+
+# 11. 检查 StarRocks
+# 检查 FE (Frontend - Java 进程)
+echo -e "\n[1. StarRocks Frontend (FE)]"
+fe_p=$(ssh $MASTER "bash -lc 'jps | grep StarRocksFE'")
+if [ -n "$fe_p" ]; then
+    echo -e "$MASTER (FE): ${GREEN}RUNNING${NC}"
+    echo -e "Web UI:    http://${MASTER_IP}:8030"
+    echo -e "MySQL CLI: ${GREEN}mysql -h ${MASTER_IP} -P 9030 -u root${NC}"
+else
+    echo -e "$MASTER (FE): ${RED}STOPPED${NC}"
+fi
+
+echo -e "\n[2. StarRocks Backend (BE)]"
+for i in "${WORKERS[@]}"
+do
+    # BE 是 C++ 编写的，jps 查不到，必须使用 ps 检查
+    be_p=$(ssh $i "bash -lc 'ps -ef | grep starrocks_be | grep -v grep'")
+    if [ -n "$be_p" ]; then
+        echo -e "$i (BE): ${GREEN}RUNNING${NC}"
+    else
+        echo -e "$i (BE): ${RED}STOPPED${NC}"
+    fi
+done
 
 echo -e "\n==================== 自检工作结束 ===================="
