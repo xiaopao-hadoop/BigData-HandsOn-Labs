@@ -1,6 +1,6 @@
 # 阶段三：元数据与基础服务部署
 
-本阶段我们将部署为整个大数据平台提供协调、元数据管理和全文索引功能的核心基础服务。这些服务是后续流处理引擎（Flink）和数据治理组件（Atlas）正常运行的关键依赖。
+本阶段我们将部署为整个大数据平台提供协调、元数据管理和全文索引功能的基础服务。这些服务是后续流处理引擎（Flink）和数据治理组件（Atlas）正常运行的依赖。
 
 ## 1. Zookeeper 3.7.1 集群部署 (基础协调服务)
 
@@ -103,7 +103,7 @@ sudo systemctl restart mysql
 
 ## 3. Hive 3.1.3 部署 (Metastore 模式)
 
-Hive 提供了基于 SQL 的大数据查询能力。此处我们采用工业界标准的独立 Metastore 部署模式。
+Hive 提供了基于 SQL 的大数据查询能力。此处我们采用独立 Metastore 部署模式。
 
 ### 3.1 下载、解压与依赖冲突解决
 ```bash
@@ -185,7 +185,7 @@ nohup hive --service hiveserver2 >> /opt/logs/hive/hiveserver2.log 2>&1 &
 
 ## 4. HBase 2.4.17 部署 (Apache Atlas 存储后端)
 
-HBase 提供低延迟的列式存储，本项目中主要作为 Apache Atlas 的图数据库底层存储。
+HBase 提供低延迟的列式存储，本集群中主要作为 Apache Atlas 的图数据库底层存储。
 
 ### 4.1 下载与解压
 ```bash
@@ -350,7 +350,18 @@ hadoop fs -mkdir -p /spark-history
 ```bash
 /opt/module/spark-2.3.0/sbin/start-history-server.sh
 ```
+### ⚠️ 兼容性预警：面向 Apache Iceberg 的升级建议
 
+如果后续构建的大数据平台后续需要集成 **Apache Iceberg** 作为数据湖底层存储格式，**强烈建议在此阶段直接将 Spark 替换为 3.x 以上版本（企业级生产环境主推 Spark 3.2 或 3.3）。**
+
+**1. 为什么要避开 Spark 2.3.0？**
+* **底层 API 限制**：Iceberg 的核心能力（如行级 ACID 更新/删除、Schema 动态演进、隐藏分区管理）深度依赖 Spark 3.0 引入的 `DataSourceV2` API 和 `SparkSessionExtensions`。
+* **功能残缺**：在 Spark 2.3.0 下，Iceberg 仅能作为非常基础的外部表进行有限的追加写（Append）操作，无法使用其强大的 Catalog 体系，丧失了现代数据湖的核心价值。
+
+**2. 升级 Spark 3.x 的部署差异**
+Spark 3.x 的部署架构与上述 2.3.0 的教程**逻辑完全一致**。无需更改配置文件的整体拓扑，仅需注意以下两点替换：
+* **包名替换**：下载 `spark-3.x.x-bin-without-hadoop.tgz`。
+* **依赖包名替换**：在步骤 6.3 注入软链接时，注意将对应的 Scala 版本号（通常从 `2.11` 变为 `2.12`）和 Spark 版本号进行对应修改。
 ---
 
 ## 7. 阶段三验收验证
