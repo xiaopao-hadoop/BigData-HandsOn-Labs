@@ -185,6 +185,53 @@ chmod +x xcall.sh
 sudo mv xcall.sh /usr/local/bin/
 ```
 
+为实现集群环境下的“单点修改，全局分发”，需部署跨节点文件同步脚本。
+
+在 `/home/hadoop/` 路径下创建 [xsync](./Cluster-Deployment-Docs/scripts/tools/xsync.sh).sh：
+
+```bash
+#!/bin/bash
+
+# =================================================================
+# Description: 集群文件同步脚本 (Cluster File Synchronizer)
+# Usage: ./xsync.sh /path/to/file_or_dir
+# =================================================================
+
+# 1. 检查参数是否为空
+if [ $# -lt 1 ]; then
+    echo "Usage: xsync <file/dir>"
+    exit 1
+fi
+
+# 2. 遍历集群节点 
+for host in lake-worker-01 lake-worker-02
+do
+    echo "------------------- Synchronizing to $host -------------------"
+    # 遍历所有待同步的文件或目录
+    for file in $@
+    do
+        # 3. 判断路径是否存在
+        if [ -e $file ]; then
+            # 获取父目录绝对路径
+            pdir=$(cd -P $(dirname $file); pwd)
+            # 获取当前文件名称
+            fname=$(basename $file)
+            # 在目标节点创建对应目录并同步文件
+            ssh $host "mkdir -p $pdir"
+            rsync -av $pdir/$fname $host:$pdir
+        else
+            echo "$file does not exist!"
+        fi
+    done
+done
+```
+
+赋予执行权限并移至系统路径（**优化建议**：在移动时顺便去掉 `.sh` 后缀，这样后续在任何目录下都可以直接敲击 `xsync` 而不需要带后缀）：
+```bash
+chmod +x xsync.sh
+sudo mv xsync.sh /usr/local/bin/xsync
+```
+
 > **💡 提示：**
 > **SSH 远程执行陷阱：** 默认 SSH 连接属于 `Non-interactive Shell`，不会加载 `~/.bashrc` 或 `/etc/profile`。通过在脚本中使用 `bash -lc` 参数，可以强制加载全量环境变量，有效避免 `Command not found` 或 `JAVA_HOME is not set` 等典型运维报错。
 
