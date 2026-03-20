@@ -10,7 +10,7 @@ if [ $# -lt 1 ]; then
 fi
 # 2. 获取指令参数
 CMD=$*
-# 3. 遍历节点执行远程 SSH 指令
+# 3. 遍历节点进行远程 SSH 连接和执行 CMD 指令
 for host in lake-master-01 lake-worker-01 lake-worker-02
 do
     echo "========== $host =========="
