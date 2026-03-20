@@ -1,0 +1,23 @@
+# ==============================================================================
+# File: 00-installer-config.yaml
+# Description: Ubuntu Netplan 静态 IP 网络配置模板
+# Usage: 
+#   1. 替换 <NETWORK_INTERFACE> 为你的真实网卡名 (可通过 `ip a` 查看，如 ens33)
+#   2. 替换 <STATIC_IP>/<CIDR> 为规划的静态 IP 和子网掩码 (如 192.168.1.101/24)
+#   3. 替换 <GATEWAY_IP> 为你的网关地址 (如 192.168.1.1)
+#   4. 将此文件覆盖到 /etc/netplan/00-installer-config.yaml 并执行 sudo netplan apply
+# ==============================================================================
+
+network:
+  ethernets:
+    <NETWORK_INTERFACE>: 
+      dhcp4: no
+      addresses:
+        - <STATIC_IP>/<CIDR>
+      routes:
+        - to: default
+          via: <GATEWAY_IP>
+      nameservers:
+        # 首选 DNS 设置为网关，备用 DNS 设置为公网 DNS
+        addresses: [<GATEWAY_IP>, 8.8.8.8]
+  version: 2

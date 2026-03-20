@@ -1,0 +1,45 @@
+# ==============================================================================
+# File: flink-conf.yaml
+# Description: Flink 核心配置文件模板 (Flink on YARN)
+# Usage:
+#   1. 将 <MASTER_HOSTNAME> 替换为你的 Master 节点主机名 (例如 lake-master-01)
+#   2. 根据你的虚拟机实际资源，适当调整 jobmanager 和 taskmanager 的内存大小
+# ==============================================================================
+
+# ==================== 1. 基础通信与资源分配 ====================
+jobmanager.rpc.address: <MASTER_HOSTNAME>
+jobmanager.rpc.port: 6123
+
+# 绑定所有网络接口，避免容器或跨节点通信失败
+jobmanager.bind-host: 0.0.0.0
+taskmanager.bind-host: 0.0.0.0
+
+# 进程总内存分配 (请根据 Worker 节点实际可用物理内存微调)
+jobmanager.memory.process.size: 1600m
+taskmanager.memory.process.size: 2048m
+
+# 每个 TaskManager 提供的任务插槽数 (建议与单机 CPU 核心数保持一致)
+taskmanager.numberOfTaskSlots: 2
+# 程序的默认全局并行度
+parallelism.default: 2
+
+# ==================== 2. 状态后端与容错 (数据湖强依赖) ====================
+# 使用 hashmap 状态后端，并强制将 Checkpoint/Savepoint 持久化写入 HDFS
+# 注意：Iceberg 等数据湖格式的提交机制极度依赖 Flink 的 Checkpoint
+state.backend.type: hashmap
+state.checkpoints.dir: hdfs://<MASTER_HOSTNAME>:8020/flink/checkpoints
+state.savepoints.dir: hdfs://<MASTER_HOSTNAME>:8020/flink/savepoints
+
+# ==================== 3. 故障恢复策略 ====================
+# 局部区域重启策略，避免单个 Task 失败导致整个 Job 全部重启
+jobmanager.execution.failover-strategy: region
+
+# ==================== 4. Web UI 与 REST API ====================
+rest.address: 0.0.0.0
+rest.bind-address: 0.0.0.0
+
+# ==================== 5. 类加载机制调优 (流湖集成必配) ====================
+# 禁用泄漏的类加载器检查，并优先使用父类加载器
+# 彻底解决 Flink 与 Hadoop、Hive 原生依赖包之间的严重冲突问题
+classloader.check-leaked-classloader: false
+classloader.resolve-order: parent-first
