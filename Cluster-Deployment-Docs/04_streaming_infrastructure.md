@@ -1,8 +1,6 @@
 # 阶段四：流处理基座搭建
 
-本阶段将为大数据平台引入实时流处理能力。我们将部署高吞吐的分布式消息队列 Kafka 作为实时数据总线，并部署真正的流批一体计算引擎 Flink（运行在 YARN 之上），打通从数据摄取到流处理的完整链路。
-
-
+本阶段将为大数据平台引入实时流处理能力。将部署高吞吐的分布式消息队列 Kafka 作为数据缓冲，后续的Atlas也依赖于Kafka。并部署流批一体计算引擎 Flink（运行在 YARN 之上），打通从数据摄取到流处理的完整链路。
 
 ## 1. Kafka 3.6.1 分布式集群部署
 
@@ -25,7 +23,7 @@ mv /opt/module/kafka_2.12-3.6.1 /opt/module/kafka-3.6.1
 ```bash
 nano /opt/module/kafka-3.6.1/config/server.properties
 ```
-修改及追加以下参数（这是 Master 节点的配置）：
+修改及追加以下参数（以 Master 节点为例的配置）：
 ```properties
 # 1. Broker 的唯一标识，集群内每台机器必须不同
 broker.id=0
@@ -105,15 +103,13 @@ advertised.listeners=PLAINTEXT://lake-worker-02:9092
 /opt/module/kafka-3.6.1/bin/kafka-console-producer.sh --bootstrap-server lake-master-01:9092 --topic test-topic
 ```
 > **💡 提示：**
-> 在生产者终端输入任意字符串，若消费者终端能实时打印，则消息队列底座搭建成功。
+> 在生产者终端输入任意字符串，若消费者终端能实时打印，则消息队列搭建成功。
 
 ---
 
 ## 2. Flink 1.17.2 部署 (Flink on YARN 架构)
 
 为了实现资源的统一调度与隔离，我们将 Flink 部署在 YARN 模式下。Flink 负责从 Kafka 消费数据，进行实时 ETL 后写入下游（如 Iceberg 数据湖）。
-
-
 
 ### 2.1 下载与解压
 在 `lake-master-01` 执行：
@@ -124,7 +120,7 @@ wget [https://archive.apache.org/dist/flink/flink-1.17.2/flink-1.17.2-bin-scala_
 tar -zxvf flink-1.17.2-bin-scala_2.12.tgz -C /opt/module/
 ```
 
-### 2.2 配置 Flink 与 Hadoop 融合环境变量
+### 2.2 配置 Flink 与 Hadoop 交互环境变量
 编辑环境变量配置：
 ```bash
 sudo nano /etc/profile.d/my_env.sh
@@ -171,7 +167,7 @@ state.savepoints.dir: hdfs://lake-master-01:8020/flink/savepoints
 classloader.check-leaked-classloader: false
 ```
 
-### 2.4 注入流湖集成连接器 (Connectors)
+### 2.4 流湖集成连接器 (Connectors)
 Flink 操作 Iceberg 和 Kafka 需要额外的 Connector Jar 包：
 ```bash
 cd /opt/module/flink-1.17.2/lib/
@@ -202,4 +198,4 @@ yarn-session.sh -nm flink-session -d -s 2 -jm 1024 -tm 2048
 /opt/module/flink-1.17.2/bin/sql-client.sh embedded -s yarn-session
 ```
 > **💡 提示：**
-> 如果成功进入 `Flink SQL>` 命令行提示符，说明流处理计算基座已完全就绪！
+> 如果成功进入 `Flink SQL>` 命令行提示符，说明Flink已就绪！
