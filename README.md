@@ -43,9 +43,10 @@
 ## 实战项目 
 
 
-| 项目主题 | 数据体量 | 数据流/处理方式 | 核心技术栈 | 数据集来源 | 核心产出/亮点 |
+| 项目主题 | 数据量 | 数据流/处理方式 | 核心技术栈 | 数据集来源 | 简介 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | [二手房数据湖仓一体分析](https://github.com/xiaopao-hadoop/BigData-HandsOn-Labs/tree/main/housing-data-warehouse) | 450k|离线批处理 (T+1) | Scrapy + Hive + Spark SQL + Flink + Iceberg + StarRocks | [网络爬虫](https://www.kaggle.com/datasets/xiaopaohadoop/second-hand-housing-dataset) | 模拟了真实的离线数仓建设流程。项目从编写分布式爬虫获取源数据开始，通过 Spark 将数据离线同步至数仓 ODS 层。核心亮点在于利用 **Flink** 与 **Apache Iceberg** 构建了稳健的 DWD/DWS 分层模型 |
+| [淘宝用户点击数据实时流计算](https://github.com/xiaopao-hadoop/BigData-HandsOn-Labs/tree/main/TaoBao-UserBehavior-Analysis) | 100M | 实时流处理 (微批 T+0) | Python + Kafka + Flink + Iceberg + StarRocks + Tableau | [天池开源数据集](https://tianchi.aliyun.com/dataset/649) | 模拟电商高并发埋点流，打通端到端实时大屏链路。核心亮点在于利用 Flink 时间窗口避免状态爆炸，通过 Iceberg 读写分离解决流式写入的小文件灾难，借助 StarRocks 视图下推与数据源隔离。 |
 
 
 
