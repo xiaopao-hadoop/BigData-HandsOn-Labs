@@ -16,7 +16,7 @@
 * 📚 **[集群部署保姆级教程 (Cluster-Deployment-Docs)](https://github.com/xiaopao-hadoop/BigData-HandsOn-Labs/tree/main/Cluster-Deployment-Docs)**：包含各类中间件和计算引擎的详细安装与配置步骤。
 * 🏗️ **[系统架构图与静态资源 (assets)](https://github.com/xiaopao-hadoop/BigData-HandsOn-Labs/tree/main/assets)**：项目架构图、ER 图及其他说明性图片资源。
 * 🏠 **[实战项目一：二手房数据湖仓一体分析 (housing-data-warehouse)](https://github.com/xiaopao-hadoop/BigData-HandsOn-Labs/tree/main/housing-data-warehouse)**：基于离线数仓的端到端数据采集、建模与分析项目。
-* 🏠 **[实战项目二：淘宝用户点击数据实时流计算](https://github.com/xiaopao-hadoop/BigData-HandsOn-Labs/tree/main/TaoBao-UserBehavior-Analysis)**：基于Flink的实时数据流处理、StarRocks OLAP分析项目。
+* 🏠 **[实战项目二：淘宝用户点击数据实时流计算(TaoBao-UserBehavior-Analysis)](https://github.com/xiaopao-hadoop/BigData-HandsOn-Labs/tree/main/TaoBao-UserBehavior-Analysis)**：基于Flink的实时数据流处理、StarRocks OLAP分析项目。
 ---
 
 ## Wishes:
